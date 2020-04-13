@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:identifia/components/footer.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'dart:typed_data';
 import 'package:identifia/models/student.dart';
@@ -17,7 +16,7 @@ class IdentifiaScanTab extends StatefulWidget {
 }
 
 class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
-  String _scanBarcode;
+  String _scanBarcode = '';
   String _college = '';
   Color _color = CupertinoColors.white;
 
@@ -72,9 +71,9 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
       // open the database
       var db = await openDatabase(path, readOnly: true);
 
-      List<Map<String, dynamic>> suka = await db.rawQuery('SELECT college FROM boats WHERE barcode = $barcodeScanRes');
-      if (suka.length > 0) {
-        collegeRes = Student.fromMapObject(suka.first).college;
+      List<Map<String, dynamic>> queryRes = await db.rawQuery('SELECT college FROM boats WHERE barcode = $barcodeScanRes');
+      if (queryRes.length > 0) {
+        collegeRes = Student.fromMapObject(queryRes.first).college;
       } else {
         collegeRes = 'College not found. Try manual search';
       }
