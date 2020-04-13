@@ -104,7 +104,7 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
       case 'Nordmetall':
         return CupertinoColors.systemYellow;
       default:
-        return CupertinoColors.white;
+        return CupertinoColors.black;
     }
   }
 
@@ -119,7 +119,7 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
               child: Center(
                 child: Text(
                   _college,
-                  style: TextStyle(fontSize: 30)
+                  style: TextStyle(fontSize: 70, color: CupertinoColors.white),
                 )
               ),
             )
