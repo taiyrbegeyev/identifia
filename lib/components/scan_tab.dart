@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:barcode_scan/barcode_scan.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:identifia/components/footer.dart';
 import 'package:path/path.dart';
@@ -16,7 +16,7 @@ class IdentifiaScanTab extends StatefulWidget {
 }
 
 class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
-  String _scanBarcode = '';
+  String _barcode = '';
   String _college = '';
   Color _color = CupertinoColors.white;
 
@@ -30,13 +30,19 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
     String barcodeScanRes, collegeRes = '';
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
-          "#ff6666", "Cancel", true, ScanMode.BARCODE);
-      print(barcodeScanRes);
-    } on PlatformException {
-      barcodeScanRes = 'Failed to get platform version.';
-    }
-
+      barcodeScanRes = await BarcodeScanner.scan();
+    } on PlatformException catch (e) {
+      if (e.code == BarcodeScanner.CameraAccessDenied) {
+        barcodeScanRes = 'The user did not grant the camera permission!';
+      } else {
+        barcodeScanRes = 'Unknown error: $e';
+      }
+    } on FormatException{
+      barcodeScanRes = 'null (User returned using the "back"-button before scanning anything. Result)';
+    } catch (e) {
+      barcodeScanRes = 'Unknown error: $e';
+    } 
+    print(barcodeScanRes);
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -70,21 +76,20 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
       }
       // open the database
       var db = await openDatabase(path, readOnly: true);
-
-      List<Map<String, dynamic>> queryRes = await db.rawQuery('SELECT college FROM boats WHERE barcode = $barcodeScanRes');
+      List<Map<String, dynamic>> queryRes = await db.rawQuery('SELECT college FROM students WHERE barcode = "$barcodeScanRes"');
       if (queryRes.length > 0) {
         collegeRes = Student.fromMapObject(queryRes.first).college;
       } else {
-        collegeRes = 'College not found. Try manual search';
+        collegeRes = 'College not found';
       }
     } catch(err) {
-      collegeRes = 'College not found. Try manual search';
+      collegeRes = 'College not found';
       print(err);
     }
 
     Color newColor = getColor(collegeRes);
     setState(() {
-      _scanBarcode = barcodeScanRes;
+      _barcode = barcodeScanRes;
       _college = collegeRes;
       _color = newColor;
     });
@@ -133,7 +138,7 @@ class _IdentifiaScanTabState extends State<IdentifiaScanTab> {
                     onPressed: () => scanBarcodeNormal(),
                     child: Text("Start Campus Card Scan")
                   ),
-                  // Text('Scan result : $_scanBarcode\n', style: TextStyle(fontSize: 20))
+                  // Text('Scan result : $_barcode\n', style: TextStyle(fontSize: 20))
                 ]
               ),
             ),
